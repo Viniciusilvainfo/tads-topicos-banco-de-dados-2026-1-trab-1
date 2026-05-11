@@ -1,11 +1,6 @@
-# Trabalho 1 - Catalogo de Livros (simples)
+# Trabalho 1 - Catalogo de Livros
 
-Projeto Java simples e separado para cumprir os requisitos:
-
-- JDBC
-- JPA/Hibernate
-- Redis (cache)
-- Comparacao de desempenho no console
+Projeto Java com acesso a dados por JDBC, JPA/Hibernate e Redis, com interface grafica em Swing.
 
 ## Estrutura
 
@@ -17,23 +12,24 @@ src/main/java/
   cache/LivroCache.java
   config/DatabaseConfig.java
   config/JPAUtil.java
+  ui/CatalogoLivrosFrame.java
   Main.java
 ```
 
 ## Requisitos
 
 - Java 17+
-- Maven 3.9+
+- Maven 3+
 - PostgreSQL ativo
 - Redis ativo
 
-## 1) Criar banco e tabela
+## Banco
 
-Use o script em `sql/init.sql`.
+Execute o script em `sql/init.sql` para criar a tabela e inserir os dados iniciais.
 
-## 2) Ajustar configuracao
+## Configuracao
 
-Padroes usados no codigo:
+Valores padrao:
 
 - DB_URL=jdbc:postgresql://localhost:5432/livrosdb
 - DB_USER=postgres
@@ -42,21 +38,23 @@ Padroes usados no codigo:
 - REDIS_PORT=6379
 - REDIS_CACHE_KEY=livros:listarTodos
 
-Se quiser, exporte variaveis de ambiente antes de executar.
-
-## 3) Executar
+## Como executar
 
 ```bash
 mvn clean compile
 mvn exec:java
 ```
 
-## Saida esperada (exemplo)
+Se quiser testar sem abrir a interface, rode:
 
-```text
-Total de livros via JDBC: 5
-Total de livros via JPA: 5
-Tempo sem cache: 15 ms
-Tempo com cache: 1 ms
-Livros do autor 'Machado de Assis': 1
+```bash
+mvn exec:java -Dexec.args=--console
 ```
+
+## O que a tela faz
+
+- Listar livros via JDBC
+- Listar livros via JPA
+- Listar livros via Redis
+- Buscar livros por autor
+- Comparar tempo sem cache e com cache

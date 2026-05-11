@@ -3,35 +3,50 @@ import config.JPAUtil;
 import jdbc.LivroJDBC;
 import model.Livro;
 import repository.LivroRepository;
+import ui.CatalogoLivrosFrame;
 
+import javax.swing.SwingUtilities;
+import java.awt.GraphicsEnvironment;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class Main {
 
     public static void main(String[] args) {
+        if (GraphicsEnvironment.isHeadless() || temArgumento(args, "--console") || temArgumento(args, "--benchmark")) {
+            executarConsole();
+            return;
+        }
+
+        SwingUtilities.invokeLater(() -> new CatalogoLivrosFrame().setVisible(true));
+    }
+
+    private static boolean temArgumento(String[] args, String alvo) {
+        for (String argumento : args) {
+            if (alvo.equalsIgnoreCase(argumento)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void executarConsole() {
         LivroJDBC livroJDBC = new LivroJDBC();
         LivroRepository livroRepository = new LivroRepository();
 
-        List<Livro> livrosJDBC = livroJDBC.listarLivros();
-        System.out.println("Total de livros via JDBC: " + livrosJDBC.size());
-
-        List<Livro> livrosJPA = livroRepository.listarTodos();
-        System.out.println("Total de livros via JPA: " + livrosJPA.size());
-
         try (LivroCache livroCache = new LivroCache()) {
-            long inicioSemCache = System.nanoTime();
-            livroJDBC.listarLivros();
-            long fimSemCache = System.nanoTime();
-
             livroCache.limparCache();
             livroCache.listarLivros();
 
-            long inicioComCache = System.nanoTime();
-            livroCache.listarLivros();
-            long fimComCache = System.nanoTime();
+            List<Livro> livrosJDBC = livroJDBC.listarLivros();
+            System.out.println("Total de livros via JDBC: " + livrosJDBC.size());
 
-            long tempoSemCacheMs = (fimSemCache - inicioSemCache) / 1_000_000;
-            long tempoComCacheMs = (fimComCache - inicioComCache) / 1_000_000;
+            List<Livro> livrosJPA = livroRepository.listarTodos();
+            System.out.println("Total de livros via JPA: " + livrosJPA.size());
+
+            long tempoSemCacheMs = medir(() -> livroJDBC.listarLivros());
+            long tempoComCacheMs = medir(() -> livroCache.listarLivros());
 
             System.out.println("Tempo sem cache: " + tempoSemCacheMs + " ms");
             System.out.println("Tempo com cache: " + tempoComCacheMs + " ms");
@@ -41,5 +56,12 @@ public class Main {
         } finally {
             JPAUtil.close();
         }
+    }
+
+    private static long medir(Supplier<List<Livro>> tarefa) {
+        long inicio = System.nanoTime();
+        tarefa.get();
+        long fim = System.nanoTime();
+        return (fim - inicio) / 1_000_000;
     }
 }
